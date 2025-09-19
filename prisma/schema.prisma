@@ -1,0 +1,29 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "sqlite"  // quick for Day 1; swap to "postgresql" later
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  sessions     Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jwtId     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+// We'll add Product/Transaction/UploadBatch on Day 2–3.
