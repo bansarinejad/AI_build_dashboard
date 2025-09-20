@@ -26,4 +26,41 @@ model Session {
   expiresAt DateTime
 }
 
-// We'll add Product/Transaction/UploadBatch on Day 2–3.
+enum TxType {
+  PROCUREMENT
+  SALE
+}
+
+model UploadBatch {
+  id         String    @id @default(cuid())
+  filename   String
+  uploadedBy String
+  createdAt  DateTime  @default(now())
+  products   Product[]
+}
+
+model Product {
+  id            String         @id @default(cuid())
+  externalId    Int?
+  name          String
+  openingStock  Int
+  batchId       String?
+  batch         UploadBatch?   @relation(fields: [batchId], references: [id])
+  createdAt     DateTime       @default(now())
+  transactions  Transaction[]
+  @@index([name])
+}
+
+model Transaction {
+  id         String    @id @default(cuid())
+  productId  String
+  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  dayIndex   Int
+  type       TxType
+  qty        Float
+  unitPrice  Float
+  createdAt  DateTime  @default(now())
+
+  @@index([productId, dayIndex, type])
+}
+
