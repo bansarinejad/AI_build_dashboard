@@ -1,9 +1,18 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
 
-const schema = process.env.PRISMA_SCHEMA || 'prisma/schema.prisma';
-const resolved = path.resolve(schema);
+function selectSchema() {
+  if (process.env.PRISMA_SCHEMA) return process.env.PRISMA_SCHEMA;
+  const url = process.env.DATABASE_URL || '';
+  if (/^postgres(ql)?:\/\//i.test(url)) {
+    return 'prisma/schema.postgres.prisma';
+  }
+  return 'prisma/schema.prisma';
+}
+
+const schemaPath = selectSchema();
+const resolved = path.resolve(schemaPath);
 
 const result = spawnSync('npx', ['prisma', 'generate', '--schema', resolved], {
   stdio: 'inherit',
