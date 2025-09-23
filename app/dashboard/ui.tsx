@@ -15,7 +15,6 @@ type ImportSummary = {
   dataQuality?: { negativeInventory?: NegativeInventoryEntry[] };
 };
 
-type TooltipParams = { axisValueLabel?: string; marker: string; seriesName: string; data?: number | string | null };
 type LineSeriesOption = { name: string; type: 'line'; yAxisIndex: 0 | 1; data: number[]; smooth: boolean };
 
 function useDebouncedValue<T>(value: T, delay = 300) {
@@ -151,12 +150,13 @@ export default function DashboardClient() {
     const option: EChartsOption = {
       tooltip: {
         trigger: 'axis',
-        formatter: (params: TooltipParams[]) => {
-          if (!params.length) return '';
-          const lines = [`<b>${params[0]?.axisValueLabel ?? ''}</b>`];
-          for (const p of params) {
-            const numeric = typeof p.data === 'number' ? p.data : Number(p.data ?? 0);
-            lines.push(`${p.marker} ${p.seriesName}: ${nf2.format(numeric)}`);
+        formatter(params) {
+          const list = Array.isArray(params) ? params : [params];
+          if (!list.length) return '';
+          const lines = [`<b>${list[0]?.axisValueLabel ?? ''}</b>`];
+          for (const row of list) {
+            const numeric = typeof row.data === 'number' ? row.data : Number(row.data ?? 0);
+            lines.push(`${row.marker} ${row.seriesName}: ${nf2.format(numeric)}`);
           }
           return lines.join('<br/>');
         },
@@ -339,6 +339,9 @@ export default function DashboardClient() {
     </main>
   );
 }
+
+
+
 
 
 
