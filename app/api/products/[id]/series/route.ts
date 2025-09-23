@@ -1,11 +1,23 @@
 ﻿import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { buildSeries } from '@/lib/series';
-import type { SeriesTransaction } from '@/lib/series';
+import { buildSeries, type DayPoint, type SeriesTransaction } from '@/lib/series';
 
-function toSeriesTransactions(
-  transactions: Array<{ dayIndex: number; type: string; qty: number; unitPrice: number }>
-): SeriesTransaction[] {
+type RouteParams = { id: string };
+
+type ProductResponse = {
+  product: { id: string; name: string };
+  points: DayPoint[];
+};
+
+type TransactionsRow = {
+  dayIndex: number;
+  type: string;
+  qty: number;
+  unitPrice: number;
+};
+
+function toSeriesTransactions(transactions: TransactionsRow[]): SeriesTransaction[] {
   return transactions.map((t) => ({
     dayIndex: t.dayIndex,
     type: t.type === 'PROCUREMENT' ? 'PROCUREMENT' : 'SALE',
@@ -14,15 +26,24 @@ function toSeriesTransactions(
   }));
 }
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, context: { params: Promise<RouteParams> }) {
+  const { id } = await context.params;
+
   const product = await prisma.product.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { transactions: { orderBy: { dayIndex: 'asc' } } },
   });
-  if (!product) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  if (!product) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
 
   const points = buildSeries(product.openingStock, toSeriesTransactions(product.transactions));
 
-  return NextResponse.json({ product: { id: product.id, name: product.name }, points });
-}
+  const payload: ProductResponse = {
+    product: { id: product.id, name: product.name },
+    points,
+  };
 
+  return NextResponse.json(payload);
+}
