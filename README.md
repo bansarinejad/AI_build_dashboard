@@ -45,3 +45,4 @@ The repo ships with a container-based Render blueprint (`render.yaml`) and `Dock
    - `JWT_EXPIRES_IN=7d`
 
 To deploy on another platform, reuse the Dockerfile or run `npm run build`, `npx prisma migrate deploy`, then `npm run start` against any PostgreSQL database.
+

@@ -1,6 +1,5 @@
-﻿// prisma/schema.prisma
 datasource db {
-  provider = env("DATABASE_PROVIDER")
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -48,6 +47,7 @@ model Product {
   batch         UploadBatch?   @relation(fields: [batchId], references: [id])
   createdAt     DateTime       @default(now())
   transactions  Transaction[]
+
   @@index([name])
 }
 
@@ -63,5 +63,3 @@ model Transaction {
 
   @@index([productId, dayIndex, type])
 }
-
-
