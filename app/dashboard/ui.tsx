@@ -153,7 +153,10 @@ export default function DashboardClient() {
         formatter(params) {
           const list = Array.isArray(params) ? params : [params];
           if (!list.length) return '';
-          const lines = [`<b>${list[0]?.axisValueLabel ?? ''}</b>`];
+          const firstParam = (list[0] as unknown) as { axisValueLabel?: string; axisValue?: string | number } | undefined;
+          const axisRaw = firstParam?.axisValueLabel ?? firstParam?.axisValue;
+          const axisLabel = axisRaw == null ? '' : String(axisRaw);
+          const lines = [`<b>${axisLabel}</b>`];
           for (const row of list) {
             const numeric = typeof row.data === 'number' ? row.data : Number(row.data ?? 0);
             lines.push(`${row.marker} ${row.seriesName}: ${nf2.format(numeric)}`);
