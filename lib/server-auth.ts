@@ -1,11 +1,12 @@
-// lib/server-auth.ts
+﻿// lib/server-auth.ts
 import { cookies } from 'next/headers';
 import { prisma } from './db';
 import { verifyJwt } from './auth';
 import { redirect } from 'next/navigation';
 
 export async function requireUser() {
-  const token = cookies().get('session')?.value;
+  const jar = await cookies();
+  const token = jar.get('session')?.value;
   if (!token) redirect(`/login?reason=unauthenticated`);
 
   const payload = await verifyJwt(token);
