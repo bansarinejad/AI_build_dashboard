@@ -1,0 +1,39 @@
+﻿services:
+  - type: web
+    name: aibuild-dashboard
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aibuild-dashboard-db
+          property: connectionString
+      - key: DATABASE_PROVIDER
+        value: postgresql
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+    healthCheckPath: /dashboard
+
+  - type: worker
+    name: aibuild-dashboard-migrate
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    autoDeploy: false
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aibuild-dashboard-db
+          property: connectionString
+      - key: DATABASE_PROVIDER
+        value: postgresql
+    startCommand: npx prisma migrate deploy
+
+# Provision a managed Postgres database
+# Render will expose DATABASE_URL automatically via the web service configuration above.
+databases:
+  - name: aibuild-dashboard-db
+    plan: free
