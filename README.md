@@ -30,5 +30,18 @@ Visit:
 
 ## Deploy
 
-Switch Prisma to `postgresql`, set `DATABASE_URL`, run migrations, deploy (e.g., Vercel + Neon).
+The repo ships with a container-based Render blueprint (`render.yaml`) and `Dockerfile`:
 
+1. Install the [Render CLI](https://render.com/docs/blueprint-spec) and authenticate.
+2. Provision the stack (web app + free Postgres) straight from the blueprint:
+   ```bash
+   render blueprint deploy
+   ```
+3. When the build finishes, Render will launch the service with `npx prisma migrate deploy && npm run start`, so migrations run before Next.js boots.
+4. Verify the generated environment variables:
+   - `DATABASE_PROVIDER=postgresql`
+   - `DATABASE_URL` (injected automatically from the managed Postgres instance)
+   - `JWT_SECRET` (auto-generated; rotate if desired)
+   - `JWT_EXPIRES_IN=7d`
+
+To deploy on another platform, reuse the Dockerfile or run `npm run build`, `npx prisma migrate deploy`, then `npm run start` against any PostgreSQL database.

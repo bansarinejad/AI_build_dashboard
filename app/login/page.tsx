@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 
@@ -29,8 +29,8 @@ export default function LoginPage() {
         throw new Error(data?.error || 'Request failed');
       }
       window.location.href = '/dashboard';
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Request failed');
     } finally {
       setBusy(false);
     }
@@ -68,7 +68,7 @@ export default function LoginPage() {
         {error && <p style={{ color: 'crimson' }}>{error}</p>}
 
         <button disabled={busy} type="submit" style={{ padding: '8px 12px', marginTop: 8 }}>
-          {busy ? 'Please wait…' : (mode === 'login' ? 'Login' : 'Register & Sign in')}
+          {busy ? 'Please waitâ€¦' : (mode === 'login' ? 'Login' : 'Register & Sign in')}
         </button>
 
         <div style={{ marginTop: 12 }}>
@@ -82,3 +82,4 @@ export default function LoginPage() {
     </main>
   );
 }
+

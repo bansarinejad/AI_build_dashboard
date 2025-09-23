@@ -1,6 +1,6 @@
-// prisma/schema.prisma
+﻿// prisma/schema.prisma
 datasource db {
-  provider = "sqlite"  // quick for Day 1; swap to "postgresql" later
+  provider = env("DATABASE_PROVIDER")
   url      = env("DATABASE_URL")
 }
 
@@ -63,4 +63,5 @@ model Transaction {
 
   @@index([productId, dayIndex, type])
 }
+
 

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { verifyJwt } from '@/lib/auth';
@@ -6,7 +6,16 @@ import { parseWorkbook } from '@/lib/parser';
 
 export const runtime = 'nodejs';
 
-async function requireAuth() {
+type AuthContext = { userId: string } | null;
+
+type NegativeInventoryEntry = {
+  productId: string;
+  name: string;
+  day: number;
+  inventory: number;
+};
+
+async function requireAuth(): Promise<AuthContext> {
   const token = cookies().get('session')?.value;
   if (!token) return null;
   const payload = await verifyJwt(token);
@@ -39,16 +48,16 @@ export async function POST(req: Request) {
     data: { filename, uploadedBy: auth.userId },
   });
 
-  let createdProducts = 0, createdTx = 0;
-  const negativeInventory: Array<{ productId: string; name: string; day: number; inventory: number }> = [];
+  let createdProducts = 0;
+  let createdTx = 0;
+  const negativeInventory: NegativeInventoryEntry[] = [];
 
   await prisma.$transaction(async (tx) => {
     for (const r of rows) {
-      // Find or create product
-      let product = null as any;
-      if (r.externalId != null) {
-        product = await tx.product.findFirst({ where: { externalId: r.externalId, name: r.name } });
-      }
+      let product = r.externalId != null
+        ? await tx.product.findFirst({ where: { externalId: r.externalId, name: r.name } })
+        : null;
+
       if (!product) {
         product = await tx.product.findFirst({ where: { name: r.name } });
       }
@@ -64,16 +73,14 @@ export async function POST(req: Request) {
         });
         createdProducts++;
       } else {
-        await tx.product.update({
+        product = await tx.product.update({
           where: { id: product.id },
           data: { openingStock: r.openingStock, batchId: batch.id },
         });
       }
 
-      // Replace transactions for a fresh import
       await tx.transaction.deleteMany({ where: { productId: product.id } });
 
-      // Insert day transactions
       for (const d of r.days) {
         const m = r.metricsByDay[d];
         if (m.pq > 0 || m.pp > 0) {
@@ -90,7 +97,6 @@ export async function POST(req: Request) {
         }
       }
 
-      // Negative inventory scan with details
       let inv = r.openingStock;
       for (const d of r.days) {
         const m = r.metricsByDay[d];

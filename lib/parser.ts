@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+﻿import * as XLSX from 'xlsx';
 
 export type ParsedRow = {
   externalId?: number | null;
@@ -24,7 +24,7 @@ const reSP = /^Sales Price \(Day (\d+)\)$/i;
 export function parseWorkbook(buf: Buffer): ParseResult {
   const wb = XLSX.read(buf, { type: 'buffer' });
   const ws = wb.Sheets[wb.SheetNames[0]];
-  const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: null });
+  const json: Array<Record<string, unknown>> = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: null });
 
   const warnings: string[] = [];
   const errors: string[] = [];
@@ -43,8 +43,8 @@ export function parseWorkbook(buf: Buffer): ParseResult {
   // Detect all day indices from headers
   const daySet = new Set<number>();
   headers.forEach((h) => {
-    let m = h.match(rePQ) || h.match(rePP) || h.match(reSQ) || h.match(reSP);
-    if (m) daySet.add(Number(m[1]));
+    const match = h.match(rePQ) ?? h.match(rePP) ?? h.match(reSQ) ?? h.match(reSP);
+    if (match) daySet.add(Number(match[1]));
   });
   const days = Array.from(daySet).sort((a, b) => a - b);
 
@@ -74,7 +74,7 @@ export function parseWorkbook(buf: Buffer): ParseResult {
       continue;
     }
     const externalId = numOrNull(r['ID']);
-    const openingStock = Math.trunc(Number(r['Opening Inventory'] ?? 0) || 0);
+    const openingStock = Math.trunc(numOrZero(r['Opening Inventory']));
 
     const metricsByDay: ParsedRow['metricsByDay'] = {};
     for (const d of days) {
@@ -100,5 +100,36 @@ export function parseWorkbook(buf: Buffer): ParseResult {
   return { rows, days, warnings, errors };
 }
 
-function numOrZero(v: any): number { const n = Number(v); return Number.isFinite(n) ? n : 0; }
-function numOrNull(v: any): number | null { const n = Number(v); return Number.isFinite(n) ? n : null; }
+function coerceNumber(value: unknown): number | null {
+  if (value == null) return null;
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const isParenthesizedNegative = /^\(.*\)$/.test(trimmed);
+    const noParens = isParenthesizedNegative ? trimmed.slice(1, -1) : trimmed;
+    const normalized = noParens.replace(/,/g, '').replace(/[^0-9.+-]/g, '');
+
+    if (!normalized || normalized === '-' || normalized === '+' || normalized === '.') {
+      return null;
+    }
+
+    const maybe = Number(normalized);
+    if (!Number.isFinite(maybe)) return null;
+    return isParenthesizedNegative ? -Math.abs(maybe) : maybe;
+  }
+  return null;
+}
+
+function numOrZero(v: unknown): number {
+  const n = coerceNumber(v);
+  return n == null ? 0 : n;
+}
+
+function numOrNull(v: unknown): number | null {
+  const n = coerceNumber(v);
+  return n == null ? null : n;
+}

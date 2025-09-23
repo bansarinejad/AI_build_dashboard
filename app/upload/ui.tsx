@@ -21,8 +21,8 @@ export default function UploadClient() {
       // store summary for dashboard banner and redirect
       sessionStorage.setItem('lastImport', JSON.stringify(data));
       window.location.href = '/dashboard';
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setBusy(false);
     }
@@ -43,4 +43,5 @@ export default function UploadClient() {
     </main>
   );
 }
+
 

@@ -1,6 +1,22 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { buildSeries } from '@/lib/series';
+import { buildSeries, type DayPoint, type SeriesTransaction } from '@/lib/series';
+
+type CompareResponseItem = {
+  product: { id: string; name: string };
+  points: DayPoint[];
+};
+
+function toSeriesTransactions(
+  transactions: Array<{ dayIndex: number; type: string; qty: number; unitPrice: number }>
+): SeriesTransaction[] {
+  return transactions.map((t) => ({
+    dayIndex: t.dayIndex,
+    type: t.type === 'PROCUREMENT' ? 'PROCUREMENT' : 'SALE',
+    qty: t.qty,
+    unitPrice: t.unitPrice,
+  }));
+}
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -12,12 +28,9 @@ export async function POST(req: Request) {
     include: { transactions: { orderBy: { dayIndex: 'asc' } } },
   });
 
-  const result = products.map(p => ({
+  const result: CompareResponseItem[] = products.map((p) => ({
     product: { id: p.id, name: p.name },
-    points: buildSeries(
-      p.openingStock,
-      p.transactions.map(t => ({ dayIndex: t.dayIndex, type: t.type as any, qty: t.qty, unitPrice: t.unitPrice }))
-    ),
+    points: buildSeries(p.openingStock, toSeriesTransactions(p.transactions)),
   }));
 
   return NextResponse.json({ series: result });
