@@ -15,8 +15,8 @@ type ImportSummary = {
   dataQuality?: { negativeInventory?: NegativeInventoryEntry[] };
 };
 
-type SeriesItem = EChartsOption['series'] extends (infer S)[] ? S : never;
 type TooltipParams = { axisValueLabel?: string; marker: string; seriesName: string; data?: number | string | null };
+type LineSeriesOption = { name: string; type: 'line'; yAxisIndex: 0 | 1; data: number[]; smooth: boolean };
 
 function useDebouncedValue<T>(value: T, delay = 300) {
   const [v, setV] = useState(value);
@@ -115,7 +115,7 @@ export default function DashboardClient() {
   }, [seriesData]);
 
   const echartsOption = useMemo(() => {
-    const series: SeriesItem[] = [];
+    const series: LineSeriesOption[] = [];
 
     for (const id of selected) {
       const s = seriesData[id];
@@ -167,12 +167,11 @@ export default function DashboardClient() {
         { type: 'value', name: 'Amount', axisLabel: { formatter: (v: number) => nf2.format(v) } },
         { type: 'value', name: 'Inventory', axisLabel: { formatter: (v: number) => nf0.format(v) } },
       ],
-      series,
+      series: series as unknown as EChartsOption['series'],
     };
 
     return option;
   }, [days, selected, seriesData, mode]);
-
   const renderModeButton = (label: string, value: typeof mode) => {
     const active = mode === value;
     return (
@@ -340,6 +339,9 @@ export default function DashboardClient() {
     </main>
   );
 }
+
+
+
 
 
 
