@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import ReactECharts from 'echarts-for-react';
-import type { CallbackDataParams, EChartsOption, SeriesOption } from 'echarts';
+import type { EChartsOption } from 'echarts';
 
 type Product = { id: string; name: string };
 type DayPoint = { day: number; inventory: number; procurementAmount: number; salesAmount: number };
@@ -14,6 +14,9 @@ type ImportSummary = {
   summary?: { createdProducts?: number; createdTx?: number };
   dataQuality?: { negativeInventory?: NegativeInventoryEntry[] };
 };
+
+type SeriesItem = EChartsOption['series'] extends (infer S)[] ? S : never;
+type TooltipParams = { axisValueLabel?: string; marker: string; seriesName: string; data?: number | string | null };
 
 function useDebouncedValue<T>(value: T, delay = 300) {
   const [v, setV] = useState(value);
@@ -112,7 +115,7 @@ export default function DashboardClient() {
   }, [seriesData]);
 
   const echartsOption = useMemo(() => {
-    const series: SeriesOption[] = [];
+    const series: SeriesItem[] = [];
 
     for (const id of selected) {
       const s = seriesData[id];
@@ -148,7 +151,7 @@ export default function DashboardClient() {
     const option: EChartsOption = {
       tooltip: {
         trigger: 'axis',
-        formatter: (params: CallbackDataParams[]) => {
+        formatter: (params: TooltipParams[]) => {
           if (!params.length) return '';
           const lines = [`<b>${params[0]?.axisValueLabel ?? ''}</b>`];
           for (const p of params) {
@@ -337,6 +340,10 @@ export default function DashboardClient() {
     </main>
   );
 }
+
+
+
+
 
 
 
