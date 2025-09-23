@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { verifyPassword, signJwt } from '@/lib/auth';
 
 const LoginSchema = z.object({
-  identifier: z.string().min(3), // email OR username
+  identifier: z.string().min(3),
   password: z.string().min(8),
 });
 
@@ -32,8 +33,8 @@ export async function POST(req: Request) {
 
   const token = await signJwt({ sub: user.id, jti: session.jwtId });
 
-  const res = NextResponse.json({ user: { id: user.id, email: user.email, username: user.username } });
-  res.cookies.set('session', token, {
+  const jar = await cookies();
+  jar.set('session', token, {
     httpOnly: true,
     sameSite: 'strict',
     secure: process.env.NODE_ENV === 'production',
@@ -41,5 +42,5 @@ export async function POST(req: Request) {
     expires: expiresAt,
   });
 
-  return res;
+  return NextResponse.json({ user: { id: user.id, email: user.email, username: user.username } });
 }

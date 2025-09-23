@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { hashPassword, signJwt } from '@/lib/auth';
@@ -29,7 +30,6 @@ export async function POST(req: Request) {
   const passwordHash = await hashPassword(password);
   const user = await prisma.user.create({ data: { email, username, passwordHash } });
 
-  // create session (7d)
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const session = await prisma.session.create({
     data: { userId: user.id, jwtId: crypto.randomUUID(), expiresAt },
@@ -37,8 +37,8 @@ export async function POST(req: Request) {
 
   const token = await signJwt({ sub: user.id, jti: session.jwtId });
 
-  const res = NextResponse.json({ user: { id: user.id, email, username } }, { status: 201 });
-  res.cookies.set('session', token, {
+  const jar = await cookies();
+  jar.set('session', token, {
     httpOnly: true,
     sameSite: 'strict',
     secure: process.env.NODE_ENV === 'production',
@@ -46,5 +46,5 @@ export async function POST(req: Request) {
     expires: expiresAt,
   });
 
-  return res;
+  return NextResponse.json({ user: { id: user.id, email, username } }, { status: 201 });
 }

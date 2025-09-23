@@ -16,7 +16,8 @@ type NegativeInventoryEntry = {
 };
 
 async function requireAuth(): Promise<AuthContext> {
-  const token = cookies().get('session')?.value;
+  const jar = await cookies();
+  const token = jar.get('session')?.value;
   if (!token) return null;
   const payload = await verifyJwt(token);
   if (!payload?.sub || !payload?.jti) return null;
@@ -118,3 +119,6 @@ export async function POST(req: Request) {
     summary: { createdProducts, createdTx, negativeInventoryCount: negativeInventory.length },
   });
 }
+
+
+
