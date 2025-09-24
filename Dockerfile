@@ -1,4 +1,4 @@
-﻿# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1
 
 FROM node:20-alpine AS deps
 WORKDIR /app
@@ -29,5 +29,6 @@ COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
-CMD ["sh", "-c", "npx prisma generate --schema prisma/schema.postgres.prisma && npx prisma migrate deploy --schema prisma/schema.postgres.prisma && npm run start"]
+CMD ["sh", "-c", "npx prisma generate --schema prisma/schema.postgres.prisma && node scripts/prisma-migrate-deploy.js && npm run start"]
+
 

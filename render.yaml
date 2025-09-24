@@ -1,4 +1,4 @@
-﻿services:
+services:
   - type: web
     name: aibuild-dashboard
     env: docker
@@ -30,10 +30,11 @@
           property: connectionString
       - key: DATABASE_PROVIDER
         value: postgresql
-    startCommand: npx prisma migrate deploy
+    startCommand: node scripts/prisma-migrate-deploy.js
 
 # Provision a managed Postgres database
 # Render will expose DATABASE_URL automatically via the web service configuration above.
 databases:
   - name: aibuild-dashboard-db
     plan: free
+
