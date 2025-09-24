@@ -1,4 +1,4 @@
-datasource db {
+﻿datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
@@ -63,3 +63,4 @@ model Transaction {
 
   @@index([productId, dayIndex, type])
 }
+

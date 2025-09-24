@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db';
 import { verifyPassword, signJwt } from '@/lib/auth';
 
 const LoginSchema = z.object({
-  identifier: z.string().min(3),
+  email: z.string().email(),
   password: z.string().min(8),
 });
 
@@ -16,11 +16,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.format() }, { status: 400 });
   }
 
-  const { identifier, password } = parsed.data;
+  const { email, password } = parsed.data;
 
-  const user = await prisma.user.findFirst({
-    where: { OR: [{ email: identifier }, { username: identifier }] },
-  });
+  const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
@@ -43,5 +41,5 @@ export async function POST(req: Request) {
     expires: expiresAt,
   });
 
-  return NextResponse.json({ user: { id: user.id, email: user.email, username: user.username } });
+  return NextResponse.json({ user: { id: user.id, email: user.email } });
 }
