@@ -1,9 +1,10 @@
-// app/layout.tsx
+﻿// app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import { cookies } from "next/headers";
+export const dynamic = 'force-dynamic';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
