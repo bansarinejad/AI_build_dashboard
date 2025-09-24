@@ -1,8 +1,67 @@
-﻿odel User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
   passwordHash String
-  createdAt    DateTime @default(now())
+  createdAt    DateTime  @default(now())
   sessions     Session[]
 }
 
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  jwtId     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model UploadBatch {
+  id         String    @id @default(cuid())
+  filename   String
+  uploadedBy String
+  createdAt  DateTime  @default(now())
+  products   Product[]
+}
+
+model Product {
+  id           String        @id @default(cuid())
+  externalId   Int?
+  name         String
+  openingStock Int
+  batchId      String?
+  createdAt    DateTime      @default(now())
+
+  batch        UploadBatch?  @relation(fields: [batchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  transactions Transaction[]
+
+  @@index([name])
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  productId String
+  dayIndex  Int
+  type      TxType
+  qty       Float
+  unitPrice Float
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([productId, dayIndex, type])
+}
+
+enum TxType {
+  PROCUREMENT
+  SALE
+}
