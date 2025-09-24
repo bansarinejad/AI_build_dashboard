@@ -9,6 +9,13 @@ export async function POST() {
 
   if (token) {
     const payload = await verifyJwt(token);
+    if (payload?.sub) {
+      await prisma.$transaction([
+        prisma.transaction.deleteMany(),
+        prisma.product.deleteMany(),
+        prisma.uploadBatch.deleteMany(),
+      ]);
+    }
     if (payload?.jti) {
       await prisma.session.delete({ where: { jwtId: payload.jti } }).catch(() => {});
     }
