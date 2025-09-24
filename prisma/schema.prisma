@@ -1,66 +1,7 @@
-﻿datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
-}
-
-model User {
+﻿model User {
   id           String   @id @default(cuid())
   email        String   @unique
-  username     String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
   sessions     Session[]
 }
-
-model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jwtId     String   @unique
-  createdAt DateTime @default(now())
-  expiresAt DateTime
-}
-
-enum TxType {
-  PROCUREMENT
-  SALE
-}
-
-model UploadBatch {
-  id         String    @id @default(cuid())
-  filename   String
-  uploadedBy String
-  createdAt  DateTime  @default(now())
-  products   Product[]
-}
-
-model Product {
-  id            String         @id @default(cuid())
-  externalId    Int?
-  name          String
-  openingStock  Int
-  batchId       String?
-  batch         UploadBatch?   @relation(fields: [batchId], references: [id])
-  createdAt     DateTime       @default(now())
-  transactions  Transaction[]
-
-  @@index([name])
-}
-
-model Transaction {
-  id         String    @id @default(cuid())
-  productId  String
-  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  dayIndex   Int
-  type       TxType
-  qty        Float
-  unitPrice  Float
-  createdAt  DateTime  @default(now())
-
-  @@index([productId, dayIndex, type])
-}
-
