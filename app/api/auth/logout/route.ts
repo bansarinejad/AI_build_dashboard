@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { verifyJwt } from '@/lib/auth';
@@ -9,11 +9,15 @@ export async function POST(req: Request) {
 
   if (token) {
     const payload = await verifyJwt(token);
+    const conditions: Array<Record<string, string>> = [];
     if (payload?.sub) {
-      await prisma.session.deleteMany({ where: { userId: payload.sub } });
+      conditions.push({ userId: payload.sub });
     }
     if (payload?.jti) {
-      await prisma.session.delete({ where: { jwtId: payload.jti } }).catch(() => {});
+      conditions.push({ jwtId: payload.jti });
+    }
+    if (conditions.length) {
+      await prisma.session.deleteMany({ where: { OR: conditions } });
     }
   }
 
