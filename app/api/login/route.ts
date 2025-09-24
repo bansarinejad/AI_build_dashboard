@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
@@ -27,12 +27,6 @@ export async function POST(req: Request) {
   }
 
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-  await prisma.$transaction([
-    prisma.transaction.deleteMany(),
-    prisma.product.deleteMany(),
-    prisma.uploadBatch.deleteMany(),
-  ]);
 
   const session = await prisma.session.create({
     data: { userId: user.id, jwtId: crypto.randomUUID(), expiresAt },
