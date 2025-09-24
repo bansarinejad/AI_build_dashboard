@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import { cookies } from "next/headers";
+
 export const dynamic = 'force-dynamic';
 
 const geistSans = Geist({
@@ -27,7 +28,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Show Login/Logout based on presence of the session cookie
   const hasSession = Boolean((await cookies()).get("session")?.value);
 
   return (
@@ -56,7 +56,17 @@ export default async function RootLayout({
                 <Link href="/login">Login</Link>
               ) : (
                 <form action="/api/auth/logout" method="post" style={{ display: "inline" }}>
-                  <button type="submit" style={{ background: "transparent", border: 0, cursor: "pointer" }}>
+                  <button
+                    type="submit"
+                    style={{
+                      background: "transparent",
+                      border: 0,
+                      cursor: "pointer",
+                      color: "#2563eb",
+                      fontSize: 14,
+                      fontWeight: 500,
+                    }}
+                  >
                     Logout
                   </button>
                 </form>
